@@ -30,7 +30,7 @@ contract Bid {
 
   mapping(uint => Listing) listings;	// list of listings
 
-  address public owner;	// owner of this contract
+  address[] public owners;	// owner of this contract
   uint public currListingId = 0;
 
   // configuration
@@ -41,12 +41,36 @@ contract Bid {
   // Init the contract with default configuration.
   // The contract owner may change the configuration later.
   function Bid() public {
-    owner = msg.sender;
+    owners.push(msg.sender);
   }
 
   modifier onlyOwner() {
-    require(msg.sender == owner);
+    bool found = false;
+    for (uint i = 0; i < owners.length; i++) {
+      if (msg.sender == owners[i]) {
+	found = true;
+	break;
+      }
+    }
+    require(found == true);
     _;
+  }
+
+  function addOwner(address newOwner) public onlyOwner {
+    bool found = false;
+    for (uint i = 0; i < owners.length; i++) {
+      if (newOwner == owners[i]) {
+        found = true;
+        break;
+      }
+    }
+    require(found != true);
+    owners.push(newOwner);
+  }
+
+  function withdraw(uint amount) public payable onlyOwner {
+    require(amount <= this.balance);
+    msg.sender.transfer(amount);
   }
 
   // A Seller calls this method to create a new listing.
